@@ -1,0 +1,12 @@
+<cloud-title>Sign in to Taco Cloud</cloud-title>
+
+<group-box title="Sign in">
+  <form [formGroup]="sign" (ngSubmit)="onSubmit()">
+    <label for="username"><b>Username:</b></label><br/>
+    <input type="text" formControlName="username" name="username" id="username" class="formField"/><br/>
+    <label for="password"><b>Password:</b></label><br/>
+    <input type="password" formControlName="password" name="password" id="password" class="formField"/><br/><br/>
+    <big-button label="Sign in"></big-button>
+  </form>
+</group-box>
+

@@ -1,0 +1,47 @@
+<div class="header">
+  <div class="logo"><a [routerLink]="['/home']"><img src="assets/TacoCloud.png"/></a></div>
+  <div class="topbar">
+    <div class="topbaritems">
+      <div class="topbaritem" >
+        <a [routerLink]="['design']" class="plainlink caps">Design a Taco</a>
+      </div>
+      <div class="topbaritem">
+        <a *ngIf="authService.isLoggedIn(); else loggedOut" href="login" class="plainlink" >
+          <span class="caps small">Sign out</span><br/>
+        </a>
+         <ng-template #loggedOut>
+          <a routerLink="/login">
+          	<span class="caps small">Sign in</span><br/>
+          </a>
+        </ng-template>
+      </div>
+      <div class="topbaritem">
+        <a href="registry" class="plainlink" >
+          <span class="caps small">Registry</span><br/>
+        </a>
+      </div>
+      <div class="topbaritem" style="font-size: 17pt;">
+        <a [routerLink]="['cart']" class="plainlink">
+          <img src="assets/cart.png" align="center" />
+          {{cart.getItemsInCart().length * 4.99 | currency}}
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="bottombar">
+    <div class="bottombaritems">
+      <div class="bottombaritem">
+        <!-- <a href="recents" class="plainlink">Latest designs</a> -->
+        <a [routerLink]="['recents']" class="plainlink">Latest designs</a>
+      </div>
+      <div class="bottombaritem">
+        <!-- <a href="specials" class="plainlink">Specials</a> -->
+        <a [routerLink]="['specials']" class="plainlink">Specials</a>
+      </div>
+      <div class="bottombaritem">
+        <!-- <a href="locations" class="plainlink">Locations</a> -->
+        <a [routerLink]="['locations']" class="plainlink">Locations</a>
+      </div>
+    </div>
+  </div>
+</div>

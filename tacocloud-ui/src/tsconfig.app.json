@@ -1,0 +1,20 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "outDir": "../out-tsc/app",
+    "module": "es2015",
+    "types": [],
+    "paths": {
+      "@app/*": ["app/*"],
+      "@cart/*": ["app/cart/*"]
+      // 다른 모듈 경로도 필요한 경우 추가해주세요.
+    }
+    // 나머지 compilerOptions 설정들...
+  },
+  "exclude": [
+    "test.ts",
+    "**/*.spec.ts"
+  ]
+}
+

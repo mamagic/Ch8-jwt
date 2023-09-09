@@ -1,0 +1,159 @@
+security:
+  user:
+    name: buzz
+    password: infinity
+
+taco:
+  orders:
+    pageSize: 10
+
+
+  discount:
+    codes:
+      abcdef: 10
+  
+spring:
+  data:
+    rest:
+      base-path: /api
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: "jdbc:mysql://localhost:3306/tacocloud?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&tinyInt1isBit=false"
+    username: root
+    password: 1234    
+    hikari:
+      auto-commit: false
+      connection-test-query: SELECT 1
+      minimum-idle: 10
+      maximum-pool-size: 50
+      pool-name: pool-tacocloud_db
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    properties:
+      hibernate:
+        hbm2ddl.auto: create-drop
+        '[format_sql]': true
+        #'[hbm2ddl.auto]': update
+        '[implicit_naming_strategy]': org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+        #physical_naming_strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+    open-in-view: false
+    show-sql: true
+
+jwt:
+  header: Authorization
+  #HS512 알고리즘을 사용할 것이기 때문에 512bit, 즉 64byte 이상의 secret key를 사용해야 한다.
+  #echo 'silvernine-tech-spring-boot-jwt-tutorial-secret-silvernine-tech-spring-boot-jwt-tutorial-secret'|base64
+  secret: c2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQtc2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQK
+  token-validity-in-seconds: 86400
+
+logging:
+  level:
+    me.silvernine: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: kafka-producer
+    
+  kafka:
+    bootstrap-servers: 43.200.164.243:9092
+#    bootstrap-servers: 15.165.75.166:9092
+    template:
+      default-topic: tacocloud_orders
+    producer:
+      keySerializer: org.springframework.kafka.support.serializer.JsonSerializer
+      valueSerializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#security:
+#  user:
+#    name: buzz
+#    password: infinity
+#
+#taco:
+#  orders:
+#    pageSize: 10
+#
+#
+#  discount:
+#    codes:
+#      abcdef: 10
+      
+#logging:
+#  level:
+#    org.springframework.data.rest: debug
+
+#spring:
+#  data:
+#    rest:
+#      base-path: /api
+#      
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: "jdbc:mysql://localhost:3306/tacocloud?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&tinyInt1isBit=false"
+#    username: root
+#    password: 1234
+#    hikari:
+#      auto-commit: false
+#      connection-test-query: SELECT 1
+#      minimum-idle: 10
+#      maximum-pool-size: 50
+#      pool-name: pool-tacocloud_db
+#  jpa:
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+#    properties:
+#      hibernate:
+#        format_sql: true
+#        hbm2ddl.auto: update
+#        implicit_naming_strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+#        #physical_naming_strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+#    open-in-view: false
+#    show-sql: true
+#      
+#  
+#
+#---
+#spring:
+#  profiles: prod
+#  
+#  
+#  
+#    
+#logging:
+#  level:
+#    tacos: WARN
+#    

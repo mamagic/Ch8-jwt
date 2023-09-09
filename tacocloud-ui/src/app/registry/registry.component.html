@@ -1,0 +1,34 @@
+<cloud-title>Sign in to Taco Cloud</cloud-title>
+
+
+<group-box title="Register">
+ <form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <label for="username"><b>Username:</b></label><br/>
+  <input type="text" formControlName="username" name="username" id="username" class="formField"/><br/>
+
+  <label for="password"><b>Password:</b></label><br/>
+  <input type="password" formControlName="password" name="password" id="password" class="formField"/><br/><br/>
+
+  <label for="verifyPassword"><b>(verify password)</b></label><br/>
+  <input type="password" formControlName="verifyPassword" id="verifyPassword" class="formField"/><br/><br/>
+
+  <label for="fullName"><b>Full name:</b></label><br/>
+  <input type="text" formControlName="fullName" id="fullName" class="formField"/><br/><br/>
+
+  <label for="street"><b>Street:</b></label><br/>
+  <input type="text" formControlName="street" id="street" class="formField"/><br/><br/>
+
+  <label for="city"><b>City / State:</b></label><br/>
+  <input type="text" formControlName="city" id="city" class="formField"/>
+  <input type="text" formControlName="state" id="state" class="formField"/><br/><br/>
+
+  <label for="zipCode"><b>Zip code:</b></label><br/>
+  <input type="text" size="2" formControlName="zipCode" id="zipCode" class="formField"/><br/><br/>
+
+  <label for="phoneNumber"><b>Phone number:</b></label><br/>
+  <input type="text" formControlName="phoneNumber" id="phoneNumber" class="formField"/><br/><br/>
+
+  <big-button label="Register"></big-button>
+</form>
+
+</group-box>
