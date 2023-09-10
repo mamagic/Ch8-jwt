@@ -4,6 +4,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { OAuthModule } from 'angular-oauth2-oidc';
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
 
 // Components
 import { AppComponent } from './app.component';
@@ -22,6 +23,9 @@ import { GroupBoxComponent } from './group-box/groupbox.component';
 import { BigButtonComponent } from './big-button/bigbutton.component';
 import { LittleButtonComponent } from './little-button/littlebutton.component';
 import { ReactiveFormsModule } from '@angular/forms';
+
+//Intercepter
+import { AuthInterceptor } from './login/AuthInterceptor';
 
 // Services
 import { ApiService } from './api/ApiService';
@@ -66,7 +70,12 @@ import { routes } from './app.routes';
   providers: [
     ApiService,
     CartService,
-    RecentTacosService
+    RecentTacosService,
+     {
+       provide: HTTP_INTERCEPTORS,
+       useClass: AuthInterceptor,
+       multi: true
+     }
   ],
   bootstrap: [AppComponent]
 })

@@ -12,12 +12,16 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -42,13 +46,16 @@ public class SecurityConfig {
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
+	private final TokenProvider tokenProvider;
+
 	public SecurityConfig(@Lazy UserDetailsService userService,
 						  @Lazy JsonLoginProcessFilter jsonLoginProcessFilter,
 						  ObjectMapper objectMapper,
 						  JwtAccessDeniedHandler jwtAccessDeniedHandler,
 						  JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
 						  JwtFilter jwtFilter,
-						  @Lazy AuthenticationManager authenticationManager
+						  @Lazy AuthenticationManager authenticationManager,
+						  TokenProvider tokenProvider
 						  ) {
 		this.userService = userService;
 		this.jsonLoginProcessFilter = jsonLoginProcessFilter;
@@ -57,11 +64,13 @@ public class SecurityConfig {
 		this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
 		this.jwtFilter = jwtFilter;
 		this.authenticationManager = authenticationManager;
+		this.tokenProvider = tokenProvider;
 	}
 	
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
+
 
 		httpSecurity
 				.authorizeHttpRequests() // HttpServletRequest를 사용하는 요청들에 대한 접근제한을 설정하겠다.
@@ -92,17 +101,19 @@ public class SecurityConfig {
 				.and().headers().frameOptions().sameOrigin();
 
 		httpSecurity
-				.addFilterBefore(jwtFilter, JsonLoginProcessFilter.class)
-				.exceptionHandling()
-				.accessDeniedHandler(jwtAccessDeniedHandler)
-				.authenticationEntryPoint(jwtAuthenticationEntryPoint);
+				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+				.addFilterBefore(jsonLoginProcessFilter, UsernamePasswordAuthenticationFilter.class)
+				.authenticationProvider(daoAuthenticationProvider());
+//				.exceptionHandling()
+//				.accessDeniedHandler(jwtAccessDeniedHandler)
+//				.authenticationEntryPoint(jwtAuthenticationEntryPoint);
 //				.and()
 //				.apply(new JwtSecurityConfig(tokenProvider));
 
-		httpSecurity
-				.addFilter(jsonLoginProcessFilter)
-				.authenticationProvider(daoAuthenticationProvider())
-				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 세션을 사용하지 않겠다
+//		httpSecurity
+//				.addFilter(jsonLoginProcessFilter)
+//				.authenticationProvider(daoAuthenticationProvider());
+//				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 세션을 사용하지 않겠다
 
 
 		return httpSecurity.build();
@@ -121,11 +132,21 @@ public class SecurityConfig {
 	public JsonLoginProcessFilter jsonLoginProcessFilter() {
 		JsonLoginProcessFilter jsonLoginProcessFilter = new JsonLoginProcessFilter(objectMapper, authenticationManager);
 		jsonLoginProcessFilter.setAuthenticationSuccessHandler((request, response, authentication) -> {
-			response.getWriter().println("Success Login");
+			String token = tokenProvider.createToken(authentication);
+
+			// JWT 토큰을 HTTP 응답으로 반환
+			response.setContentType("application/json");
+			response.getWriter().write("{\"token\": \"" + token + "\"}");
+			//response.getWriter().println("Success Login");
 		});
 		return jsonLoginProcessFilter;
 	}
 
+	@Bean
+	AuthenticationManager authenticationManager(
+			AuthenticationConfiguration authenticationConfiguration) throws Exception {
+		return authenticationConfiguration.getAuthenticationManager();
+	}
 
 	@Bean
 	public BCryptPasswordEncoder bCryptPasswordEncoder() {
