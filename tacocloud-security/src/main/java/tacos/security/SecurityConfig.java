@@ -3,10 +3,13 @@ package tacos.security;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -18,14 +21,12 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import tacos.security.jwt.JwtAccessDeniedHandler;
-import tacos.security.jwt.JwtAuthenticationEntryPoint;
-import tacos.security.jwt.JwtSecurityConfig;
-import tacos.security.jwt.TokenProvider;
+import tacos.security.jwt.*;
 
 @Configuration
 @EnableWebSecurity
@@ -33,21 +34,29 @@ public class SecurityConfig {
 
 	private final UserDetailsService userService;
 	private final JsonLoginProcessFilter jsonLoginProcessFilter;
+	private final ObjectMapper objectMapper;
+	private final AuthenticationManager authenticationManager;
+
+	//jwt
+	private final JwtFilter jwtFilter;
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-	private final TokenProvider tokenProvider;
 
 	public SecurityConfig(@Lazy UserDetailsService userService,
 						  @Lazy JsonLoginProcessFilter jsonLoginProcessFilter,
-						  @Lazy JwtAccessDeniedHandler jwtAccessDeniedHandler,
-						  @Lazy JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-						  @Lazy TokenProvider tokenProvider
+						  ObjectMapper objectMapper,
+						  JwtAccessDeniedHandler jwtAccessDeniedHandler,
+						  JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
+						  JwtFilter jwtFilter,
+						  @Lazy AuthenticationManager authenticationManager
 						  ) {
 		this.userService = userService;
 		this.jsonLoginProcessFilter = jsonLoginProcessFilter;
+		this.objectMapper = objectMapper;
 		this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
 		this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
-		this.tokenProvider = tokenProvider;
+		this.jwtFilter = jwtFilter;
+		this.authenticationManager = authenticationManager;
 	}
 	
 
@@ -62,6 +71,10 @@ public class SecurityConfig {
 				// .access("hasRole('ROLE_USER')")
 				.requestMatchers(HttpMethod.PATCH, "/ingredients").permitAll() // 회원가입 api
 				.requestMatchers("/**").permitAll()
+
+				.and()
+				.csrf().disable() // 외부 POST 요청을 받아야하니 csrf는 꺼준다.
+				.cors().configurationSource(corsConfigurationSource())
 
 				// 아래부분은 따로 필터를 만듬
 				// .and()
@@ -79,19 +92,18 @@ public class SecurityConfig {
 				.and().headers().frameOptions().sameOrigin();
 
 		httpSecurity
-				.addFilterBefore(jsonLoginProcessFilter, LogoutFilter.class)
-				.authenticationProvider(daoAuthenticationProvider())
-				.csrf().disable() // 외부 POST 요청을 받아야하니 csrf는 꺼준다.
-				.cors().configurationSource(corsConfigurationSource())
-				.and()
-				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 세션을 사용하지 않겠다
-
-		httpSecurity
+				.addFilterBefore(jwtFilter, JsonLoginProcessFilter.class)
 				.exceptionHandling()
 				.accessDeniedHandler(jwtAccessDeniedHandler)
-				.authenticationEntryPoint(jwtAuthenticationEntryPoint)
-				.and()
-				.apply(new JwtSecurityConfig(tokenProvider));
+				.authenticationEntryPoint(jwtAuthenticationEntryPoint);
+//				.and()
+//				.apply(new JwtSecurityConfig(tokenProvider));
+
+		httpSecurity
+				.addFilter(jsonLoginProcessFilter)
+				.authenticationProvider(daoAuthenticationProvider())
+				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 세션을 사용하지 않겠다
+
 
 		return httpSecurity.build();
 	}
@@ -104,19 +116,15 @@ public class SecurityConfig {
 
 		return provider;
 	}
-	
+
 	@Bean
-	public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-		return configuration.getAuthenticationManager();
+	public JsonLoginProcessFilter jsonLoginProcessFilter() {
+		JsonLoginProcessFilter jsonLoginProcessFilter = new JsonLoginProcessFilter(objectMapper, authenticationManager);
+		jsonLoginProcessFilter.setAuthenticationSuccessHandler((request, response, authentication) -> {
+			response.getWriter().println("Success Login");
+		});
+		return jsonLoginProcessFilter;
 	}
-//	@Bean
-//	public JsonLoginProcessFilter jsonLoginProcessFilter() {
-//		JsonLoginProcessFilter jsonLoginProcessFilter = new JsonLoginProcessFilter(objectMapper, authenticationManager);
-//		jsonLoginProcessFilter.setAuthenticationSuccessHandler((request, response, authentication) -> {
-//			response.getWriter().println("Success Login");
-//		});
-//		return jsonLoginProcessFilter;
-//	}
 
 
 	@Bean

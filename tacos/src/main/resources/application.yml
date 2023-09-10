@@ -49,7 +49,9 @@ jwt:
 
 logging:
   level:
-    me.silvernine: DEBUG
+    tacos:
+      security:
+        jwt: DEBUG
 
 ---
 spring:
