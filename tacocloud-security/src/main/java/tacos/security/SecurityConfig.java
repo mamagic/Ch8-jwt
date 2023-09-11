@@ -45,7 +45,6 @@ public class SecurityConfig {
 	private final JwtFilter jwtFilter;
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-
 	private final TokenProvider tokenProvider;
 
 	public SecurityConfig(@Lazy UserDetailsService userService,
@@ -66,55 +65,30 @@ public class SecurityConfig {
 		this.authenticationManager = authenticationManager;
 		this.tokenProvider = tokenProvider;
 	}
-	
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception {
 
-
 		httpSecurity
 				.authorizeHttpRequests() // HttpServletRequest를 사용하는 요청들에 대한 접근제한을 설정하겠다.
-				.requestMatchers(HttpMethod.OPTIONS).permitAll() // needed for Angular/CORS
-				.requestMatchers(HttpMethod.POST, "/api/ingredients").permitAll()
-				.requestMatchers("/design", "/orders/**", "/login").permitAll() // 로그인 api
-				// .access("hasRole('ROLE_USER')")
-				.requestMatchers(HttpMethod.PATCH, "/ingredients").permitAll() // 회원가입 api
-				.requestMatchers("/**").permitAll()
-
+				.requestMatchers("/login", "/registry").permitAll() // 로그인 api
+				.anyRequest().authenticated()
 				.and()
 				.csrf().disable() // 외부 POST 요청을 받아야하니 csrf는 꺼준다.
 				.cors().configurationSource(corsConfigurationSource())
-
-				// 아래부분은 따로 필터를 만듬
-				// .and()
-				// .formLogin()
-				// .usernameParameter("username")
-				// .passwordParameter("password")
-				// .loginProcessingUrl("/login")
-				// .defaultSuccessUrl("/")
-
 				.and().httpBasic().realmName("Taco Cloud")
 				.and().logout().logoutSuccessUrl("/")
-
-				// Allow pages to be loaded in frames from the same origin; needed for
-				// H2-Console
 				.and().headers().frameOptions().sameOrigin();
 
 		httpSecurity
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 				.addFilterBefore(jsonLoginProcessFilter, UsernamePasswordAuthenticationFilter.class)
-				.authenticationProvider(daoAuthenticationProvider());
-//				.exceptionHandling()
-//				.accessDeniedHandler(jwtAccessDeniedHandler)
-//				.authenticationEntryPoint(jwtAuthenticationEntryPoint);
-//				.and()
-//				.apply(new JwtSecurityConfig(tokenProvider));
-
-//		httpSecurity
-//				.addFilter(jsonLoginProcessFilter)
-//				.authenticationProvider(daoAuthenticationProvider());
-//				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 세션을 사용하지 않겠다
-
+				.authenticationProvider(daoAuthenticationProvider())
+				.exceptionHandling()
+				.accessDeniedHandler(jwtAccessDeniedHandler)
+				.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+				.and()
+				.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS); // 세션을 사용하지 않겠다
 
 		return httpSecurity.build();
 	}

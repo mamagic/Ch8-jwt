@@ -6,7 +6,7 @@
         <a [routerLink]="['design']" class="plainlink caps">Design a Taco</a>
       </div>
       <div class="topbaritem">
-        <a *ngIf="authService.isLoggedIn(); else loggedOut" href="login" class="plainlink" >
+        <a *ngIf="authService.isLoggedIn(); else loggedOut" href="login" class="plainlink" (click)="authService.removeToken()" >
           <span class="caps small">Sign out</span><br/>
         </a>
          <ng-template #loggedOut>
